@@ -3,6 +3,9 @@ package com.handnote.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.handnote.app.data.entity.TaskRecord
 import com.handnote.app.ui.viewmodel.FeedItem
 import com.handnote.app.ui.viewmodel.FeedItemType
@@ -38,41 +42,40 @@ fun FeedScreen(
         }
     ) { paddingValues ->
         // 使用 Box 明确提供尺寸约束，并应用 padding
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
         ) {
             if (feedItems.isEmpty()) {
                 // 空状态：居中显示提示文本
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "还没有任何记录，可以先写一篇手账。")
-            }
-        } else {
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "还没有任何记录，可以先写一篇手账。")
+                }
+            } else {
                 // 有数据：显示 LazyColumn
-                // LazyColumn 不需要 fillMaxSize，它会自动填充父容器
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(feedItems, key = { it.id }) { item ->
-                    when (item.type) {
-                        FeedItemType.POST -> {
-                            item.post?.let { post ->
-                                PostCard(
-                                    content = post.content,
-                                    createTime = post.createTime
-                                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(feedItems, key = { it.id }) { item ->
+                        when (item.type) {
+                            FeedItemType.POST -> {
+                                item.post?.let { post ->
+                                    PostCard(
+                                        content = post.content,
+                                        createTime = post.createTime
+                                    )
+                                }
                             }
-                        }
-                        FeedItemType.TASK -> {
-                            item.task?.let { task ->
-                                TaskRecordCard(taskRecord = task)
+                            FeedItemType.TASK -> {
+                                item.task?.let { task ->
+                                    TaskRecordCard(taskRecord = task)
                                 }
                             }
                         }
@@ -180,42 +183,66 @@ private fun PostEditorDialog(
     onSave: (String) -> Unit
 ) {
     var content by remember { mutableStateOf("") }
+    val scrollState = rememberScrollState()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "新建手账") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = content,
-                    onValueChange = { content = it },
-                    label = { Text("内容") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 120.dp)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "后续可以在这里扩展图片、关联任务等字段。",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onSave(content)
-                },
-                enabled = content.isNotBlank()
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f)
+                .padding(horizontal = 24.dp, vertical = 48.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
             ) {
-                Text("保存")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(
+                    text = "新建手账",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                ) {
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("内容") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "后续可以在这里扩展图片、关联任务等字段。",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("取消")
+                    }
+                    TextButton(
+                        onClick = { onSave(content) },
+                        enabled = content.isNotBlank()
+                    ) {
+                        Text("保存")
+                    }
+                }
             }
         }
-    )
+    }
 }
 

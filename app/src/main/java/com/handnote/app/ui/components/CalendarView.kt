@@ -131,21 +131,21 @@ fun CalendarView(
                 .padding(4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // 将日期列表按行分组
-            calendarDays.chunked(7).forEach { weekDays ->
+            // 将日期列表按行分组（weekRow 避免与上方 weekDays 星期标题变量冲突）
+            calendarDays.chunked(7).forEach { weekRow ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    weekDays.forEach { day ->
+                    weekRow.forEach { day ->
                         Box(
                             modifier = Modifier.weight(1f)
                         ) {
-                CalendarDayItem(
-                    day = day,
-                    isSelected = day.date == selectedDate,
-                    onClick = { day.date?.let { onDateSelected(it) } }
-                )
+                            CalendarDayItem(
+                                day = day,
+                                isSelected = day.date == selectedDate,
+                                onClick = { day.date?.let { onDateSelected(it) } }
+                            )
                         }
                     }
                 }

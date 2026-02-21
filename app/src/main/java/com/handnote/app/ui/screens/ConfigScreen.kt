@@ -2,6 +2,7 @@ package com.handnote.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.handnote.app.data.entity.Anniversary
 import com.handnote.app.data.entity.ShiftRule
 import com.handnote.app.ui.components.AppPickerButton
@@ -240,11 +242,11 @@ private fun ShiftRuleItem(
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
-    ) {
-        Row(
+        ) {
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = shiftRule.title,
@@ -253,12 +255,12 @@ private fun ShiftRuleItem(
                     modifier = Modifier.weight(1f)
                 )
                 Row {
-                TextButton(onClick = { onEdit(shiftRule) }) {
-                    Text("编辑")
-                }
-                TextButton(onClick = { onDelete(shiftRule) }) {
-                    Text("删除")
-                }
+                    TextButton(onClick = { onEdit(shiftRule) }) {
+                        Text("编辑")
+                    }
+                    TextButton(onClick = { onDelete(shiftRule) }) {
+                        Text("删除")
+                    }
                 }
             }
             
@@ -322,11 +324,11 @@ private fun AnniversaryItem(
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
-    ) {
-        Row(
+        ) {
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = anniversary.title,
@@ -335,13 +337,13 @@ private fun AnniversaryItem(
                     modifier = Modifier.weight(1f)
                 )
                 Row {
-                TextButton(onClick = { onEdit(anniversary) }) {
-                    Text("编辑")
+                    TextButton(onClick = { onEdit(anniversary) }) {
+                        Text("编辑")
+                    }
+                    TextButton(onClick = { onDelete(anniversary) }) {
+                        Text("删除")
+                    }
                 }
-                TextButton(onClick = { onDelete(anniversary) }) {
-                    Text("删除")
-                }
-            }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -471,17 +473,33 @@ private fun ShiftRuleEditDialog(
         return arr.toString(2)
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = if (initial == null) "新增排班规则" else "编辑排班规则") },
-        text = {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f)
+                .padding(horizontal = 24.dp, vertical = 48.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(scrollState)
-                    .heightIn(max = 600.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxSize()
+                    .padding(24.dp)
             ) {
+                Text(
+                    text = if (initial == null) "新增排班规则" else "编辑排班规则",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -676,47 +694,51 @@ private fun ShiftRuleEditDialog(
                     )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val cycleDays = cycleDaysText.toIntOrNull() ?: 1
-                    val reminderLevel = defaultReminderLevelText.toIntOrNull() ?: 2
-                    val startDate = try {
-                        LocalDate.parse(startDateText, DateTimeFormatter.ISO_LOCAL_DATE)
-                    } catch (e: Exception) {
-                        defaultStartDate
-                    }
-                    val startMillis = startDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
-                    val finalConfig = if (useAdvancedMode) {
-                        shiftConfigJson.ifBlank { "[]" }
-                    } else {
-                        generateSimpleConfig()
-                    }
-
-                    val rule = ShiftRule(
-                        id = initial?.id ?: 0,
-                        title = title.ifBlank { "未命名规则" },
-                        startDate = startMillis,
-                        cycleDays = cycleDays,
-                        shiftConfig = finalConfig,
-                        skipHoliday = skipHoliday,
-                        defaultReminderLevel = reminderLevel
-                    )
-                    onConfirm(rule)
-                },
-                enabled = (useAdvancedMode && configError == null || !useAdvancedMode) && title.isNotBlank()
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Text("保存")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
+                    TextButton(onClick = onDismiss) {
+                        Text("取消")
+                    }
+                    TextButton(
+                        onClick = {
+                            val cycleDays = cycleDaysText.toIntOrNull() ?: 1
+                            val reminderLevel = defaultReminderLevelText.toIntOrNull() ?: 2
+                            val startDate = try {
+                                LocalDate.parse(startDateText, DateTimeFormatter.ISO_LOCAL_DATE)
+                            } catch (e: Exception) {
+                                defaultStartDate
+                            }
+                            val startMillis = startDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
+
+                            val finalConfig = if (useAdvancedMode) {
+                                shiftConfigJson.ifBlank { "[]" }
+                            } else {
+                                generateSimpleConfig()
+                            }
+
+                            val rule = ShiftRule(
+                                id = initial?.id ?: 0,
+                                title = title.ifBlank { "未命名规则" },
+                                startDate = startMillis,
+                                cycleDays = cycleDays,
+                                shiftConfig = finalConfig,
+                                skipHoliday = skipHoliday,
+                                defaultReminderLevel = reminderLevel
+                            )
+                            onConfirm(rule)
+                        },
+                        enabled = (useAdvancedMode && configError == null || !useAdvancedMode) && title.isNotBlank()
+                    ) {
+                        Text("保存")
+                    }
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -744,87 +766,112 @@ private fun AnniversaryEditDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = if (initial == null) "新增纪念日" else "编辑纪念日") },
-        text = {
+    val scrollState = rememberScrollState()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f)
+                .padding(horizontal = 24.dp, vertical = 48.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
             ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("名称") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("例如：生日、结婚纪念日") }
+                Text(
+                    text = if (initial == null) "新增纪念日" else "编辑纪念日",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
                 )
-                
-                OutlinedTextField(
-                    value = dateText,
-                    onValueChange = { 
-                        // 简单验证日期格式
-                        if (it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) || it.isEmpty()) {
-                            dateText = it
-                        }
-                    },
-                    label = { Text("日期（YYYY-MM-DD）") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = dateError != null,
-                    supportingText = {
-                        dateError?.let {
-                            Text(it, color = MaterialTheme.colorScheme.error)
-                        } ?: Text("每年该日期都会提醒（仅匹配月日，忽略年份）")
-                    },
-                    placeholder = { Text("例如：2024-01-01") }
-                )
-                
-                OutlinedTextField(
-                    value = levelText,
-                    onValueChange = { levelText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("提醒等级（0/1/2）") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("0=无提醒, 1=弱提醒, 2=强提醒")
-                    }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val level = levelText.toIntOrNull() ?: 1
-                    val finalDate = if (dateText.isBlank()) {
-                        LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                    } else {
-                        try {
-                            LocalDate.parse(dateText, DateTimeFormatter.ISO_LOCAL_DATE)
-                                .format(DateTimeFormatter.ISO_LOCAL_DATE)
-                        } catch (e: Exception) {
-                            LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                        }
-                    }
-                    val anniversary = Anniversary(
-                        id = initial?.id ?: 0,
-                        title = title.ifBlank { "未命名纪念日" },
-                        targetDate = finalDate,
-                        reminderLevel = level,
-                        reminderTime = initial?.reminderTime
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("名称") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("例如：生日、结婚纪念日") }
                     )
-                    onConfirm(anniversary)
-                },
-                enabled = dateError == null && title.isNotBlank()
-            ) {
-                Text("保存")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
+
+                    OutlinedTextField(
+                        value = dateText,
+                        onValueChange = {
+                            if (it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) || it.isEmpty()) {
+                                dateText = it
+                            }
+                        },
+                        label = { Text("日期（YYYY-MM-DD）") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = dateError != null,
+                        supportingText = {
+                            dateError?.let {
+                                Text(it, color = MaterialTheme.colorScheme.error)
+                            } ?: Text("每年该日期都会提醒（仅匹配月日，忽略年份）")
+                        },
+                        placeholder = { Text("例如：2024-01-01") }
+                    )
+
+                    OutlinedTextField(
+                        value = levelText,
+                        onValueChange = { levelText = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("提醒等级（0/1/2）") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        supportingText = {
+                            Text("0=无提醒, 1=弱提醒, 2=强提醒")
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("取消")
+                    }
+                    TextButton(
+                        onClick = {
+                            val level = levelText.toIntOrNull() ?: 1
+                            val finalDate = if (dateText.isBlank()) {
+                                LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                            } else {
+                                try {
+                                    LocalDate.parse(dateText, DateTimeFormatter.ISO_LOCAL_DATE)
+                                        .format(DateTimeFormatter.ISO_LOCAL_DATE)
+                                } catch (e: Exception) {
+                                    LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                                }
+                            }
+                            val anniversary = Anniversary(
+                                id = initial?.id ?: 0,
+                                title = title.ifBlank { "未命名纪念日" },
+                                targetDate = finalDate,
+                                reminderLevel = level,
+                                reminderTime = initial?.reminderTime
+                            )
+                            onConfirm(anniversary)
+                        },
+                        enabled = dateError == null && title.isNotBlank()
+                    ) {
+                        Text("保存")
+                    }
+                }
             }
         }
-    )
+    }
 }
 
