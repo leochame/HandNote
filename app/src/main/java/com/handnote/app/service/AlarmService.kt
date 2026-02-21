@@ -112,6 +112,7 @@ object AlarmService {
         return when (taskRecord.sourceType) {
             "shift_rule" -> "倒班打卡提醒"
             "anniversary" -> "纪念日提醒"
+            "gmail_interview" -> "面试提醒"
             else -> "任务提醒"
         }
     }

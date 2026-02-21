@@ -14,7 +14,11 @@ class ViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return MainViewModel(repository, context) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        if (modelClass.isAssignableFrom(GmailViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return GmailViewModel(context, repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
 

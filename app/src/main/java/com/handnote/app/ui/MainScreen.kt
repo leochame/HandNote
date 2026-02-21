@@ -46,6 +46,7 @@ fun MainScreen(viewModelFactory: ViewModelFactory) {
             NavigationBar {
                 val screens = listOf(
                     Screen.Calendar to Icons.Filled.DateRange,
+                    Screen.Gmail to Icons.Filled.Mail,
                     Screen.Feed to Icons.Filled.List,
                     Screen.Config to Icons.Filled.Settings,
                     Screen.Settings to Icons.Filled.MoreVert
@@ -79,6 +80,19 @@ fun MainScreen(viewModelFactory: ViewModelFactory) {
         ) {
             composable(Screen.Calendar.route) {
                 CalendarScreen(viewModel = viewModel)
+            }
+            composable(Screen.Gmail.route) {
+                val gmailViewModel: com.handnote.app.ui.viewmodel.GmailViewModel = viewModel(factory = viewModelFactory)
+                GmailScreen(
+                    viewModel = gmailViewModel,
+                    onOpenSettings = {
+                        navController.navigate(Screen.Settings.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             composable(Screen.Feed.route) {
                 FeedScreen(viewModel = viewModel)

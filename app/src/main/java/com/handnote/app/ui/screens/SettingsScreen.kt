@@ -17,10 +17,17 @@ import com.handnote.app.ui.LogViewerActivity
 import com.handnote.app.ui.viewmodel.HolidaySyncState
 import com.handnote.app.ui.viewmodel.MainViewModel
 import com.handnote.app.util.FileLogger
+import com.handnote.app.util.GmailPrefs
 import java.io.File
 
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +49,46 @@ fun SettingsScreen(viewModel: MainViewModel) {
         )
         
         Divider()
+
+        // Gmail + AI 集成配置
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            var apiKey by remember { mutableStateOf(GmailPrefs.getGeminiApiKey(context) ?: "") }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Gmail 邮件助手",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "配置 Gemini API Key 以使用 AI 总结邮件和识别面试安排。可从 https://ai.google.dev 免费获取。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = apiKey,
+                    onValueChange = { apiKey = it },
+                    label = { Text("Gemini API Key") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+                Button(
+                    onClick = {
+                        GmailPrefs.setGeminiApiKey(context, apiKey.ifBlank { null })
+                        Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show()
+                    }
+                ) {
+                    Text("保存 API Key")
+                }
+            }
+        }
         
         // 节假日同步卡片
         Card(

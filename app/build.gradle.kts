@@ -88,6 +88,9 @@ dependencies {
     // Desugaring for java.time API support on API < 26
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
+    // Gmail + AI 集成
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
