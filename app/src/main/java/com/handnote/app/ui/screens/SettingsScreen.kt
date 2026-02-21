@@ -12,10 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import com.handnote.app.ui.LogViewerActivity
 import com.handnote.app.ui.viewmodel.HolidaySyncState
 import com.handnote.app.ui.viewmodel.MainViewModel
 import com.handnote.app.util.FileLogger
+import java.io.File
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll

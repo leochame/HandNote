@@ -34,6 +34,7 @@ class AppRepository(
     suspend fun insertTaskRecord(taskRecord: TaskRecord) = taskRecordDao.insertTaskRecord(taskRecord)
     suspend fun updateTaskRecord(taskRecord: TaskRecord) = taskRecordDao.updateTaskRecord(taskRecord)
     suspend fun deleteTaskRecord(taskRecord: TaskRecord) = taskRecordDao.deleteTaskRecord(taskRecord)
+    suspend fun deletePendingTasksBySource(sourceType: String, sourceId: Long) = taskRecordDao.deletePendingTasksBySource(sourceType, sourceId)
 
     // Post operations
     fun getAllPosts(): Flow<List<Post>> = postDao.getAllPosts()

@@ -1,5 +1,6 @@
 package com.handnote.app.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handnote.app.data.entity.Anniversary
@@ -7,6 +8,7 @@ import com.handnote.app.data.entity.Post
 import com.handnote.app.data.entity.ShiftRule
 import com.handnote.app.data.entity.TaskRecord
 import com.handnote.app.data.repository.AppRepository
+import com.handnote.app.service.AlarmManagerService
 import com.handnote.app.service.HolidaySyncService
 import com.handnote.app.service.ShiftSchedulerService
 import com.handnote.app.util.FileLogger
@@ -17,10 +19,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class MainViewModel(private val repository: AppRepository) : ViewModel() {
-    
+class MainViewModel(
+    private val repository: AppRepository,
+    private val context: Context
+) : ViewModel() {
+
     private val schedulerService = ShiftSchedulerService(repository)
     private val holidaySyncService = HolidaySyncService(repository)
+    private val alarmManagerService = AlarmManagerService(context)
 
     // 所有排班规则（安全初始化，捕获异常）
     val allShiftRules: StateFlow<List<ShiftRule>> = try {
@@ -196,7 +202,9 @@ class MainViewModel(private val repository: AppRepository) : ViewModel() {
      */
     private suspend fun generateFutureTaskRecords(daysAhead: Int = 30) {
         // 仅基于当前用户配置的排班规则生成未来任务，不再自动创建测试数据
-        schedulerService.generateAllTaskRecords(daysAhead = 30)
+        schedulerService.generateAllTaskRecords(daysAhead = daysAhead)
+        // 注册所有待执行任务到系统闹钟
+        alarmManagerService.registerAllPendingTasks(repository)
     }
     
     // ---------------- ShiftRule CRUD ----------------

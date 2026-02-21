@@ -3,8 +3,13 @@ package com.handnote.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +38,11 @@ fun ConfigScreen(
 
     var editingAnniversary by remember { mutableStateOf<Anniversary?>(null) }
     var showAnniversaryDialog by remember { mutableStateOf(false) }
-    
+
+    // 控制面板展开/收起状态
+    var isShiftRulesExpanded by remember { mutableStateOf(true) }
+    var isAnniversariesExpanded by remember { mutableStateOf(true) }
+
     val scrollState = rememberScrollState()
 
     Column(
@@ -42,130 +51,81 @@ fun ConfigScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        Text(
-            text = "排班规则",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth()
+        // 排班规则面板
+        ExpandableSection(
+            title = "排班规则",
+            itemCount = shiftRules.size,
+            itemLabel = "条",
+            isExpanded = isShiftRulesExpanded,
+            onExpandToggle = { isShiftRulesExpanded = !isShiftRulesExpanded },
+            onAddClick = {
+                editingShiftRule = null
+                showShiftRuleDialog = true
+            },
+            addButtonText = "新增规则"
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            if (shiftRules.isEmpty()) {
+                Text(
+                    text = "暂无规则，请点击「新增规则」创建。",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "当前规则：${shiftRules.size} 条",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    TextButton(onClick = {
-                        editingShiftRule = null
-                        showShiftRuleDialog = true
-                    }) {
-                        Text("新增规则")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (shiftRules.isEmpty()) {
-                    Text(
-                        text = "暂无规则，请点击「新增规则」创建。",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // 外层已是可滚动容器；这里必须先约束高度，再允许内部滚动，
-                            // 否则会在外层 scroll 传递的无限高度约束下崩溃。
-                            .heightIn(max = 220.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        shiftRules.forEach { rule ->
-                            ShiftRuleItem(
-                                shiftRule = rule,
-                                onEdit = {
-                                    editingShiftRule = it
-                                    showShiftRuleDialog = true
-                                },
-                                onDelete = {
-                                    viewModel.deleteShiftRule(it)
-                                }
-                            )
-                        }
+                    shiftRules.forEach { rule ->
+                        ShiftRuleItem(
+                            shiftRule = rule,
+                            onEdit = {
+                                editingShiftRule = it
+                                showShiftRuleDialog = true
+                            },
+                            onDelete = {
+                                viewModel.deleteShiftRule(it)
+                            }
+                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "纪念日 / 特殊事件",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth()
+        // 纪念日面板
+        ExpandableSection(
+            title = "纪念日 / 特殊事件",
+            itemCount = anniversaries.size,
+            itemLabel = "个",
+            isExpanded = isAnniversariesExpanded,
+            onExpandToggle = { isAnniversariesExpanded = !isAnniversariesExpanded },
+            onAddClick = {
+                editingAnniversary = null
+                showAnniversaryDialog = true
+            },
+            addButtonText = "新增纪念日"
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            if (anniversaries.isEmpty()) {
+                Text(
+                    text = "暂无纪念日配置，请点击「新增纪念日」创建。",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "当前纪念日：${anniversaries.size} 个",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    TextButton(onClick = {
-                        editingAnniversary = null
-                        showAnniversaryDialog = true
-                    }) {
-                        Text("新增纪念日")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (anniversaries.isEmpty()) {
-                    Text(
-                        text = "暂无纪念日配置，请点击「新增纪念日」创建。",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // 同上：先约束高度，再允许内部滚动，避免无限高度约束崩溃
-                            .heightIn(max = 220.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        anniversaries.forEach { anniversary ->
-                            AnniversaryItem(
-                                anniversary = anniversary,
-                                onEdit = {
-                                    editingAnniversary = it
-                                    showAnniversaryDialog = true
-                                },
-                                onDelete = {
-                                    viewModel.deleteAnniversary(it)
-                                }
-                            )
-                        }
+                    anniversaries.forEach { anniversary ->
+                        AnniversaryItem(
+                            anniversary = anniversary,
+                            onEdit = {
+                                editingAnniversary = it
+                                showAnniversaryDialog = true
+                            },
+                            onDelete = {
+                                viewModel.deleteAnniversary(it)
+                            }
+                        )
                     }
                 }
             }
@@ -192,6 +152,75 @@ fun ConfigScreen(
                 showAnniversaryDialog = false
             }
         )
+    }
+}
+
+/**
+ * 可展开/收起的配置面板组件
+ */
+@Composable
+private fun ExpandableSection(
+    title: String,
+    itemCount: Int,
+    itemLabel: String,
+    isExpanded: Boolean,
+    onExpandToggle: () -> Unit,
+    onAddClick: () -> Unit,
+    addButtonText: String,
+    content: @Composable () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            // 标题行：可点击展开/收起
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // 展开/收起按钮
+                IconButton(onClick = onExpandToggle) {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "收起" else "展开"
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "当前：$itemCount $itemLabel",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                TextButton(onClick = onAddClick) {
+                    Text(addButtonText)
+                }
+            }
+
+            // 可展开的内容区域
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    content()
+                }
+            }
+        }
     }
 }
 

@@ -106,9 +106,9 @@ object FileLogger {
      */
     private fun cleanupOldCrashReports(context: Context) {
         try {
-            // 清理项目根目录下的 logs 文件夹中的崩溃报告
-            val logsDir = File(context.filesDir.parentFile?.parentFile?.parentFile?.parentFile?.parentFile, "logs")
-            cleanupCrashFilesInDir(logsDir)
+            // 清理应用内部存储中的崩溃报告
+            val internalDir = context.filesDir
+            cleanupCrashFilesInDir(internalDir)
 
             // 清理 Downloads 目录中的崩溃报告
             val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)

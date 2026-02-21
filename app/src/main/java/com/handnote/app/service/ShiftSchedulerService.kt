@@ -221,6 +221,9 @@ class ShiftSchedulerService(
         }
 
         for (rule in shiftRules) {
+            // 先清理该规则的旧任务记录（仅清理 pending 状态的）
+            repository.deletePendingTasksBySource("shift_rule", rule.id)
+
             val taskRecords = generateTaskRecords(rule, today, endDate)
 
             // 批量插入任务记录（避免重复）
@@ -264,6 +267,9 @@ class ShiftSchedulerService(
         val yearsToCheck = listOf(startDate.year, startDate.year + 1)
 
         for (anniversary in anniversaries) {
+            // 先清理该纪念日的旧任务记录（仅清理 pending 状态的）
+            repository.deletePendingTasksBySource("anniversary", anniversary.id)
+
             runCatching {
                 val originalDate = LocalDate.parse(anniversary.targetDate, formatter)
                 val monthDay = MonthDay.of(originalDate.month, originalDate.dayOfMonth)

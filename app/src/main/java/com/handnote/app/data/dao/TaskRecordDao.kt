@@ -32,5 +32,8 @@ interface TaskRecordDao {
 
     @Query("DELETE FROM task_records WHERE id = :id")
     suspend fun deleteTaskRecordById(id: Long)
+
+    @Query("DELETE FROM task_records WHERE sourceType = :sourceType AND sourceId = :sourceId AND status = 'pending'")
+    suspend fun deletePendingTasksBySource(sourceType: String, sourceId: Long)
 }
 

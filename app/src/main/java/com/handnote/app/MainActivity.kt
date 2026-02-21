@@ -2,8 +2,12 @@ package com.handnote.app
 
 import android.os.Bundle
 import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,10 +35,23 @@ import java.time.LocalDate
 import java.util.*
 
 class MainActivity : ComponentActivity() {
-    
+
     private var database: AppDatabase? = null
     private var repository: AppRepository? = null
-    
+
+    // 通知权限请求
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Log.d(TAG, "通知权限已授予")
+            FileLogger.d(TAG, "通知权限已授予")
+        } else {
+            Log.w(TAG, "通知权限被拒绝，部分提醒功能可能无法正常工作")
+            FileLogger.w(TAG, "通知权限被拒绝，部分提醒功能可能无法正常工作")
+        }
+    }
+
     companion object {
         private const val TAG = "MainActivity"
         private const val PREFS_NAME = "handnote_prefs"
@@ -152,6 +169,9 @@ class MainActivity : ComponentActivity() {
                 Log.e(TAG, "Failed to create notification channel", e)
                 FileLogger.e(TAG, "Failed to create notification channel", e)
             }
+
+            // 请求通知权限（Android 13+）
+            requestNotificationPermission()
             
             // 注册所有待执行的任务到 AlarmManager
             val repo = repository
@@ -181,7 +201,7 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "Setting up UI...")
             val finalRepository = repository
             if (finalRepository != null) {
-                val viewModelFactory = ViewModelFactory(finalRepository)
+                val viewModelFactory = ViewModelFactory(finalRepository, this@MainActivity)
                 Log.d(TAG, "ViewModelFactory created, calling setContent...")
                 setContent {
                     Log.d(TAG, "setContent lambda called")
@@ -330,6 +350,28 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "检查节假日同步状态时出错", e)
             FileLogger.e(TAG, "检查节假日同步状态时出错", e)
+        }
+    }
+
+    /**
+     * 请求通知权限（Android 13+ 需要动态请求）
+     */
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED -> {
+                    Log.d(TAG, "通知权限已授予")
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // 用户之前拒绝过，可以显示解释说明
+                    Log.d(TAG, "需要向用户解释为什么需要通知权限")
+                    requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                else -> {
+                    // 首次请求权限
+                    requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
         }
     }
 }
